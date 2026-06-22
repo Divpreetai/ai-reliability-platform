@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Evaluation Platform - Dashboard</title>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for High-Fidelity Data Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Glassmorphic Stylesheet -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved logo-icon"></i>
+                <span class="logo-text">Agent<span class="highlight">Eval</span></span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#leaderboards" class="nav-item active" onclick="switchTab('leaderboards')">
+                    <i class="fa-solid fa-chart-line"></i> Leaderboards
+                </a>
+                <a href="#datasets" class="nav-item" onclick="switchTab('datasets')">
+                    <i class="fa-solid fa-database"></i> Datasets
+                </a>
+                <a href="#prompts" class="nav-item" onclick="switchTab('prompts')">
+                    <i class="fa-solid fa-file-signature"></i> Prompts
+                </a>
+                <a href="#evaluations" class="nav-item" onclick="switchTab('evaluations')">
+                    <i class="fa-solid fa-play"></i> Run Evaluations
+                </a>
+                <a href="#playground" class="nav-item" onclick="switchTab('playground')">
+                    <i class="fa-solid fa-vials"></i> Compare Playground
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot-online"></span>
+                    <span>Eval Engine: Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Panel -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 id="page-title">Leaderboards</h1>
+                    <p class="subtitle" id="page-subtitle">Benchmarking model accuracy, prompt versions, and guardrails.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="loadAllData()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB 1: LEADERBOARDS -->
+            <section id="tab-leaderboards" class="tab-pane active">
+                <!-- Stat Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fa-solid fa-robot"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Top Model</span>
+                            <span class="stat-value" id="top-model-name">-</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Avg Latency</span>
+                            <span class="stat-value" id="avg-latency-val">0 ms</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon emerald"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">API Spending</span>
+                            <span class="stat-value" id="total-spending-val">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon coral"><i class="fa-solid fa-microscope"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Evals Run</span>
+                            <span class="stat-value" id="total-evals-val">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-row">
+                    <div class="glass-panel chart-container-large">
+                        <h3>Model Score vs Latency Benchmarks</h3>
+                        <canvas id="modelBenchmarkChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tables Row -->
+                <div class="tables-grid">
+                    <div class="glass-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-trophy text-purple"></i> Model Leaderboard</h3>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Score Index</th>
+                                        <th>Avg Latency</th>
+                                        <th>Total Cost</th>
+                                        <th>Runs</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="model-leaderboard-body">
+                                    <tr><td colspan="5" class="text-center">Loading leaderboard data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-code-branch text-cyan"></i> Prompt Version Rankings</h3>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prompt Template</th>
+                                        <th>Version</th>
+                                        <th>Avg Score</th>
+                                        <th>Avg Latency</th>
+                                        <th>Runs</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prompt-leaderboard-body">
+                                    <tr><td colspan="5" class="text-center">Loading prompt rankings...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel margin-top-20">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-database text-emerald"></i> Dataset Pass Rates</h3>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Dataset Name</th>
+                                    <th>Category</th>
+                                    <th>Pass Rate (Score >= 80%)</th>
+                                    <th>Evaluations Run</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataset-leaderboard-body">
+                                <tr><td colspan="4" class="text-center">Loading dataset stats...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: DATASETS -->
+            <section id="tab-datasets" class="tab-pane">
+                <div class="layout-split">
+                    <!-- Left: Dataset List -->
+                    <div class="glass-panel split-left">
+                        <div class="panel-header flex-between">
+                            <h3>Active Datasets</h3>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateDatasetModal()">
+                                <i class="fa-solid fa-plus"></i> New Dataset
+                            </button>
+                        </div>
+                        <div class="list-group" id="dataset-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Test Cases -->
+                    <div class="glass-panel split-right" id="dataset-details-panel">
+                        <div class="panel-placeholder">
+                            <i class="fa-solid fa-database large-icon"></i>
+                            <p>Select a dataset from the left panel to manage its test cases.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: RUN EVALUATIONS -->
+            <section id="tab-evaluations" class="tab-pane">
+                <div class="layout-split">
+                    <!-- Trigger Form -->
+                    <div class="glass-panel split-left">
+                        <h3>Configure Evaluation Run</h3>
+                        <p class="panel-desc">Queue an evaluation batch in the background. Results will compute asynchronously.</p>
+                        
+                        <form id="evaluation-run-form" onsubmit="triggerEvaluationRun(event)" class="form-grid">
+                            <div class="form-group">
+                                <label for="run-name">Run Identifier / Name</label>
+                                <input type="text" id="run-name" required placeholder="e.g. Finance Prompt V2 Test">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="run-dataset">Evaluation Dataset</label>
+                                <select id="run-dataset" required>
+                                    <option value="">-- Select Dataset --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="run-prompt">System Prompt Version (Optional)</label>
+                                <select id="run-prompt">
+                                    <option value="">-- Default / No Template --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="run-model">Target LLM Model</label>
+                                <select id="run-model" required>
+                                    <option value="gpt-4o-mini">OpenAI gpt-4o-mini (Recommended)</option>
+                                    <option value="gpt-4o">OpenAI gpt-4o</option>
+                                    <option value="claude-3-5-sonnet">Anthropic Claude 3.5 Sonnet</option>
+                                    <option value="claude-3-haiku">Anthropic Claude 3 Haiku</option>
+                                    <option value="gemini-1.5-flash">Google Gemini 1.5 Flash</option>
+                                    <option value="gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+                                    <option value="ollama/llama3">Local Ollama Llama 3</option>
+                                    <option value="ollama/mistral">Local Ollama Mistral</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary margin-top-10">
+                                <i class="fa-solid fa-circle-play"></i> Trigger Background Evaluation
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Recent Runs -->
+                    <div class="glass-panel split-right">
+                        <h3>Background Runs History</h3>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Run Name</th>
+                                        <th>Model</th>
+                                        <th>Status</th>
+                                        <th>API Cost</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="runs-history-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: PROMPTS -->
+            <section id="tab-prompts" class="tab-pane">
+                <div class="layout-split">
+                    <!-- Left: Prompt List -->
+                    <div class="glass-panel split-left">
+                        <div class="panel-header flex-between">
+                            <h3>Prompt Templates</h3>
+                            <button class="btn btn-primary btn-sm" onclick="showCreatePromptModal()">
+                                <i class="fa-solid fa-plus"></i> New Prompt
+                            </button>
+                        </div>
+                        <div class="list-group" id="prompt-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Prompt Versions & Viewer -->
+                    <div class="glass-panel split-right" id="prompt-details-panel">
+                        <div class="panel-placeholder">
+                            <i class="fa-solid fa-file-signature large-icon"></i>
+                            <p>Select a prompt template from the left panel to manage its versions and compare templates.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PLAYGROUND / COMPARISON -->
+            <section id="tab-playground" class="tab-pane">
+                <div class="glass-panel">
+                    <h3>Multi-Model & Version Playground</h3>
+                    <p class="panel-desc">Evaluate custom outputs or compare models side-by-side. Scores are generated immediately.</p>
+                    
+                    <div class="playground-inputs-row">
+                        <div class="form-group flex-1">
+                            <label for="play-prompt">Input Query / Prompt</label>
+                            <textarea id="play-prompt" rows="3" placeholder="Enter query (e.g. Summarize the transaction logs for Q3)"></textarea>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="play-context">Reference Context (Required for RAG / Grounding checks)</label>
+                            <textarea id="play-context" rows="3" placeholder="Context info (e.g. Q3 transaction details: Revenue was $12M, transaction count 45,000...)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="playground-inputs-row margin-top-10">
+                        <div class="form-group flex-1">
+                            <label for="play-expected">Expected Ground Truth Output (Required for accuracy scores)</label>
+                            <textarea id="play-expected" rows="2" placeholder="e.g. Revenue grew to $12 million over 45k transactions."></textarea>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="play-tools">Expected Tool Selections (For Agent testing - comma separated)</label>
+                            <input type="text" id="play-tools" placeholder="e.g. search_db, calculator">
+                        </div>
+                    </div>
+
+                    <!-- Comparison Setups -->
+                    <div class="playground-compare-setup margin-top-20">
+                        <div class="compare-column">
+                            <h4>Model Configuration A</h4>
+                            <div class="form-group">
+                                <label for="compare-model-a">Select Model A</label>
+                                <select id="compare-model-a" class="select-sm">
+                                    <option value="gpt-4o-mini">OpenAI gpt-4o-mini</option>
+                                    <option value="gpt-4o">OpenAI gpt-4o</option>
+                                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                    <option value="ollama/llama3">Local Ollama Llama 3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="compare-system-a">System Instructions A</label>
+                                <textarea id="compare-system-a" rows="2" placeholder="e.g. Be extremely concise. Keep answers under 15 words."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="compare-column">
+                            <h4>Model Configuration B</h4>
+                            <div class="form-group">
+                                <label for="compare-model-b">Select Model B</label>
+                                <select id="compare-model-b" class="select-sm">
+                                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="gpt-4o-mini">OpenAI gpt-4o-mini</option>
+                                    <option value="gpt-4o">OpenAI gpt-4o</option>
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                    <option value="ollama/llama3">Local Ollama Llama 3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="compare-system-b">System Instructions B</label>
+                                <textarea id="compare-system-b" rows="2" placeholder="e.g. Be verbose, detailed, and format output as a list."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary margin-top-20 width-full" onclick="runComparison()">
+                        <i class="fa-solid fa-arrows-left-right"></i> Run Side-by-Side Evaluation
+                    </button>
+                </div>
+
+                <!-- Comparison Output Panels -->
+                <div class="playground-outputs-grid margin-top-20" id="comparison-results-row" style="display: none;">
+                    <div class="glass-panel" id="panel-output-a">
+                        <!-- Filled by JS -->
+                    </div>
+                    <div class="glass-panel" id="panel-output-b">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: CREATE DATASET -->
+    <div id="create-dataset-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" onclick="hideCreateDatasetModal()">&times;</span>
+            <h2>Create New Evaluation Dataset</h2>
+            <form onsubmit="createDataset(event)" class="form-grid">
+                <div class="form-group">
+                    <label for="ds-name">Dataset Name</label>
+                    <input type="text" id="ds-name" required placeholder="e.g. Healthcare Safety Evals">
+                </div>
+                <div class="form-group">
+                    <label for="ds-category">Category</label>
+                    <select id="ds-category">
+                        <option value="General">General</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Legal">Legal</option>
+                        <option value="Customer Support">Customer Support</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ds-desc">Description</label>
+                    <textarea id="ds-desc" rows="3" placeholder="Purpose of this dataset..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-check"></i> Create Dataset</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TEST CASE -->
+    <div id="add-testcase-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" onclick="hideAddTestCaseModal()">&times;</span>
+            <h2>Add Test Case</h2>
+            <form onsubmit="createTestCase(event)" class="form-grid">
+                <input type="hidden" id="tc-dataset-id">
+                <div class="form-group">
+                    <label for="tc-input">Input Prompt / Query</label>
+                    <textarea id="tc-input" required rows="3" placeholder="What prompt is sent to the model?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tc-context">Reference Context (RAG/Grounding)</label>
+                    <textarea id="tc-context" rows="3" placeholder="Reference documents or ground-truth context."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tc-output">Expected Ground Truth Output (Optional)</label>
+                    <textarea id="tc-output" rows="2" placeholder="Perfect target response."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tc-tools">Expected Tools (Agent Evals - comma separated, optional)</label>
+                    <input type="text" id="tc-tools" placeholder="e.g. search_db, weather_api">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Test Case</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: RUN DETAILS -->
+    <div id="run-details-modal" class="modal">
+        <div class="modal-content modal-large glass-panel">
+            <span class="close-btn" onclick="hideRunDetailsModal()">&times;</span>
+            <h2 id="run-details-title">Run Evaluation Results</h2>
+            <p id="run-details-meta" class="subtitle">Model: - | Cost: -</p>
+            
+            <div class="run-results-viewer">
+                <!-- Left panel: results index -->
+                <div class="run-results-sidebar" id="run-results-list">
+                    <!-- Populated dynamically -->
+                </div>
+                <!-- Right panel: detailed result inspection -->
+                <div class="run-results-detail-pane" id="run-results-detail-content">
+                    <div class="panel-placeholder">
+                        <i class="fa-solid fa-magnifying-glass large-icon"></i>
+                        <p>Select a test case result from the left panel to inspect outputs, latencies, and evaluator scores.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE PROMPT -->
+    <div id="create-prompt-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" onclick="hideCreatePromptModal()">&times;</span>
+            <h2>Create New Prompt Template</h2>
+            <form onsubmit="createNewPrompt(event)" class="form-grid">
+                <div class="form-group">
+                    <label for="prompt-name-input">Prompt Name</label>
+                    <input type="text" id="prompt-name-input" required placeholder="e.g. Healthcare Agent Prompt">
+                </div>
+                <div class="form-group">
+                    <label for="prompt-text-input">Template Text</label>
+                    <textarea id="prompt-text-input" required rows="6" placeholder="You are a helpful assistant. Use local guidelines..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-check"></i> Create Template (v1)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORT TEST CASES -->
+    <div id="import-testcase-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" onclick="hideImportModal()">&times;</span>
+            <h2>Bulk Import Test Cases</h2>
+            <p class="panel-desc">Upload a CSV or JSON file to add multiple test cases to this dataset.</p>
+            
+            <div class="import-format-info" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; margin: 10px 0; font-size: 0.9em;">
+                <strong>Expected Columns / Keys:</strong>
+                <ul style="margin: 5px 0 0 15px; padding: 0;">
+                    <li><code>input_prompt</code> (Required)</li>
+                    <li><code>reference_context</code> (Optional, for RAG)</li>
+                    <li><code>expected_output</code> (Optional, Ground truth)</li>
+                    <li><code>expected_tools</code> (Optional, comma-separated list of tools)</li>
+                </ul>
+            </div>
+            
+            <form onsubmit="importFile(event)" class="form-grid margin-top-10">
+                <input type="hidden" id="import-dataset-id">
+                <div class="form-group">
+                    <label for="import-file-input">Choose CSV or JSON File</label>
+                    <input type="file" id="import-file-input" accept=".csv,.json" required>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> Upload & Import</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core App JS -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

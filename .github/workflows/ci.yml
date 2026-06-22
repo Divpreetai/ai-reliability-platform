@@ -1,0 +1,33 @@
+name: Agent Evaluation Platform CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Pytest
+      env:
+        DATABASE_URL: sqlite:///./test.db
+        OPENAI_API_KEY: mock-key
+        GEMINI_API_KEY: mock-key
+      run: |
+        python -m pytest backend/tests/

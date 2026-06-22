@@ -1,0 +1,35 @@
+# Python Caches & Build Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local SQLite databases
+*.db
+agent_eval.db
+test.db
+
+# Environment configurations & Secrets
+.env
+.venv
+venv/
+ENV/
+
+# IDE & Editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Agent Workspace / System artifacts
+.agents/
+walkthrough.md
+implementation_plan.md
+task.md
